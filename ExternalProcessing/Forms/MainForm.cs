@@ -24,17 +24,18 @@ public partial class MainForm : Form
         BtnReconciliation.Enabled = permissions.Contains(PermissionKeys.Reconciliation);
         BtnFinanceAudit.Enabled = permissions.Contains(PermissionKeys.FinanceAudit);
         BtnReport.Enabled = permissions.Contains(PermissionKeys.Report);
+        BtnUserManagement.Enabled = permissions.Contains(PermissionKeys.UserManagement);
     }
 
     private void BtnApplication_Click(object sender, EventArgs e)
     {
-        using var form = new ApplicationForm();
+        using var form = new ApplicationForm(_currentUser);
         form.ShowDialog();
     }
 
     private void BtnAudit_Click(object sender, EventArgs e)
     {
-        using var form = new AuditForm();
+        using var form = new AuditForm(_currentUser);
         form.ShowDialog();
     }
 
@@ -59,6 +60,12 @@ public partial class MainForm : Form
     private void BtnReport_Click(object sender, EventArgs e)
     {
         using var form = new ReportForm();
+        form.ShowDialog();
+    }
+
+    private void BtnUserManagement_Click(object sender, EventArgs e)
+    {
+        using var form = new UserManagementForm();
         form.ShowDialog();
     }
 

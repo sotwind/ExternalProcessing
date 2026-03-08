@@ -10,9 +10,11 @@ public partial class ApplicationForm : Form
 {
     private readonly ExternalProcessingService _service = new();
     private List<ExternalProcessingApplication> _applications = new();
+    private readonly User _currentUser;
 
-    public ApplicationForm()
+    public ApplicationForm(User currentUser)
     {
+        _currentUser = currentUser;
         InitializeComponent();
         LoadStatusOptions();
         LoadApplications();
@@ -70,6 +72,14 @@ public partial class ApplicationForm : Form
         this.BtnSearch.Text = "搜索";
         this.BtnSearch.Click += new EventHandler(this.BtnSearch_Click);
 
+        // BtnRefresh
+        this.BtnRefresh.Location = new System.Drawing.Point(720, 23);
+        this.BtnRefresh.Name = "BtnRefresh";
+        this.BtnRefresh.Size = new System.Drawing.Size(93, 30);
+        this.BtnRefresh.TabIndex = 5;
+        this.BtnRefresh.Text = "重置";
+        this.BtnRefresh.Click += new EventHandler(this.BtnRefresh_Click);
+
         // DgvApplications
         this.DgvApplications.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         this.DgvApplications.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -77,6 +87,9 @@ public partial class ApplicationForm : Form
         this.DgvApplications.Name = "DgvApplications";
         this.DgvApplications.Size = new System.Drawing.Size(940, 480);
         this.DgvApplications.TabIndex = 5;
+        this.DgvApplications.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        this.DgvApplications.MultiSelect = false;
+        this.DgvApplications.ReadOnly = true;
         this.DgvApplications.CellDoubleClick += new DataGridViewCellEventHandler(this.DgvApplications_CellDoubleClick);
 
         // BtnAdd
@@ -112,15 +125,6 @@ public partial class ApplicationForm : Form
         this.BtnDelete.Text = "删除";
         this.BtnDelete.Click += new EventHandler(this.BtnDelete_Click);
 
-        // BtnRefresh
-        this.BtnRefresh.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        this.BtnRefresh.Location = new System.Drawing.Point(990, 220);
-        this.BtnRefresh.Name = "BtnRefresh";
-        this.BtnRefresh.Size = new System.Drawing.Size(100, 35);
-        this.BtnRefresh.TabIndex = 9;
-        this.BtnRefresh.Text = "刷新";
-        this.BtnRefresh.Click += new EventHandler(this.BtnRefresh_Click);
-
         // ApplicationForm
         this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
         this.AutoScaleMode = AutoScaleMode.Font;
@@ -130,11 +134,11 @@ public partial class ApplicationForm : Form
         this.Controls.Add(this.CboStatus);
         this.Controls.Add(this.TxtSearch);
         this.Controls.Add(this.BtnSearch);
+        this.Controls.Add(this.BtnRefresh);
         this.Controls.Add(this.DgvApplications);
         this.Controls.Add(this.BtnAdd);
         this.Controls.Add(this.BtnEdit);
         this.Controls.Add(this.BtnDelete);
-        this.Controls.Add(this.BtnRefresh);
         this.Name = "ApplicationForm";
         this.StartPosition = FormStartPosition.CenterScreen;
         this.Text = "申请管理";
@@ -189,10 +193,18 @@ public partial class ApplicationForm : Form
                 DgvApplications.Columns["ApplicationDate"].HeaderText = "申请日期";
                 DgvApplications.Columns["ProcessorName"].HeaderText = "加工商";
                 DgvApplications.Columns["ProcessingContent"].HeaderText = "加工内容";
+                DgvApplications.Columns["TotalQuantity"].HeaderText = "数量";
                 DgvApplications.Columns["ExpectedReturnDate"].HeaderText = "预计归还日期";
                 DgvApplications.Columns["StatusText"].HeaderText = "状态";
                 DgvApplications.Columns["Remark"].HeaderText = "备注";
                 DgvApplications.Columns["OperatorTime"].HeaderText = "操作时间";
+                
+                // 添加审批意见列
+                if (DgvApplications.Columns.Contains("LatestAuditRemark"))
+                {
+                    DgvApplications.Columns["LatestAuditRemark"].HeaderText = "审批意见";
+                    DgvApplications.Columns["LatestAuditRemark"].DisplayIndex = 8;
+                }
 
                 DgvApplications.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             }
@@ -210,10 +222,9 @@ public partial class ApplicationForm : Form
         CboStatus.Items.Add(new ComboBoxItem("待审批", 1));
         CboStatus.Items.Add(new ComboBoxItem("已审批", 2));
         CboStatus.Items.Add(new ComboBoxItem("已拒绝", 3));
-        CboStatus.Items.Add(new ComboBoxItem("已外发", 4));
-        CboStatus.Items.Add(new ComboBoxItem("已验收", 5));
-        CboStatus.Items.Add(new ComboBoxItem("已对账", 6));
-        CboStatus.Items.Add(new ComboBoxItem("已财务审核", 7));
+        CboStatus.Items.Add(new ComboBoxItem("已验收", 4));
+        CboStatus.Items.Add(new ComboBoxItem("已对账", 5));
+        CboStatus.Items.Add(new ComboBoxItem("已财务审核", 6));
         CboStatus.DisplayMember = "Text";
         CboStatus.ValueMember = "Value";
         CboStatus.SelectedIndex = 0;
@@ -221,7 +232,7 @@ public partial class ApplicationForm : Form
 
     private void BtnAdd_Click(object sender, EventArgs e)
     {
-        using var form = new ApplicationEditForm();
+        using var form = new ApplicationEditForm(_currentUser);
         if (form.ShowDialog() == DialogResult.OK)
         {
             LoadApplications();
@@ -237,7 +248,15 @@ public partial class ApplicationForm : Form
         }
 
         var application = (ExternalProcessingApplication)DgvApplications.SelectedRows[0].DataBoundItem;
-        using var form = new ApplicationEditForm(application);
+        
+        // 检查状态：只有待审批(1)或已拒绝(3)才能编辑
+        if (application.Status != 1 && application.Status != 3)
+        {
+            MessageBox.Show("只有待审批或已拒绝的记录才能编辑，如需修改请先反审", "提示");
+            return;
+        }
+        
+        using var form = new ApplicationEditForm(application, _currentUser);
         if (form.ShowDialog() == DialogResult.OK)
         {
             LoadApplications();
@@ -252,9 +271,17 @@ public partial class ApplicationForm : Form
             return;
         }
 
+        var application = (ExternalProcessingApplication)DgvApplications.SelectedRows[0].DataBoundItem;
+        
+        // 检查状态：只有待审批(1)或已拒绝(3)才能删除
+        if (application.Status != 1 && application.Status != 3)
+        {
+            MessageBox.Show("只有待审批或已拒绝的记录才能删除，如需删除请先反审", "提示");
+            return;
+        }
+
         if (MessageBox.Show("确定要删除选中的记录吗？", "确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
         {
-            var application = (ExternalProcessingApplication)DgvApplications.SelectedRows[0].DataBoundItem;
             try
             {
                 if (_service.DeleteApplication(application.ApplicationId))
@@ -276,6 +303,10 @@ public partial class ApplicationForm : Form
 
     private void BtnRefresh_Click(object sender, EventArgs e)
     {
+        // 重置搜索条件
+        CboStatus.SelectedIndex = 0;
+        TxtSearch.Text = "";
+        // 重新加载数据
         LoadApplications();
     }
 

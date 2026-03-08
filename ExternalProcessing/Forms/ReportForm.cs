@@ -62,12 +62,22 @@ public partial class ReportForm : Form
         this.BtnSearch.Text = "搜索";
         this.BtnSearch.Click += new EventHandler(this.BtnSearch_Click);
 
+        this.BtnRefresh.Location = new System.Drawing.Point(590, 23);
+        this.BtnRefresh.Name = "BtnRefresh";
+        this.BtnRefresh.Size = new System.Drawing.Size(93, 30);
+        this.BtnRefresh.TabIndex = 5;
+        this.BtnRefresh.Text = "重置";
+        this.BtnRefresh.Click += new EventHandler(this.BtnRefresh_Click);
+
         this.DgvApplications.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         this.DgvApplications.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
         this.DgvApplications.Location = new System.Drawing.Point(30, 70);
         this.DgvApplications.Name = "DgvApplications";
         this.DgvApplications.Size = new System.Drawing.Size(940, 480);
-        this.DgvApplications.TabIndex = 5;
+        this.DgvApplications.TabIndex = 6;
+        this.DgvApplications.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+        this.DgvApplications.MultiSelect = false;
+        this.DgvApplications.ReadOnly = true;
 
         this.BtnExport.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         this.BtnExport.BackColor = System.Drawing.Color.FromArgb(220, 53, 69);
@@ -76,18 +86,10 @@ public partial class ReportForm : Form
         this.BtnExport.Location = new System.Drawing.Point(990, 70);
         this.BtnExport.Name = "BtnExport";
         this.BtnExport.Size = new System.Drawing.Size(100, 35);
-        this.BtnExport.TabIndex = 6;
+        this.BtnExport.TabIndex = 7;
         this.BtnExport.Text = "导出";
         this.BtnExport.UseVisualStyleBackColor = false;
         this.BtnExport.Click += new EventHandler(this.BtnExport_Click);
-
-        this.BtnRefresh.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        this.BtnRefresh.Location = new System.Drawing.Point(990, 120);
-        this.BtnRefresh.Name = "BtnRefresh";
-        this.BtnRefresh.Size = new System.Drawing.Size(100, 35);
-        this.BtnRefresh.TabIndex = 7;
-        this.BtnRefresh.Text = "刷新";
-        this.BtnRefresh.Click += new EventHandler(this.BtnRefresh_Click);
 
         this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
         this.AutoScaleMode = AutoScaleMode.Font;
@@ -97,9 +99,9 @@ public partial class ReportForm : Form
         this.Controls.Add(this.CboStatus);
         this.Controls.Add(this.TxtSearch);
         this.Controls.Add(this.BtnSearch);
+        this.Controls.Add(this.BtnRefresh);
         this.Controls.Add(this.DgvApplications);
         this.Controls.Add(this.BtnExport);
-        this.Controls.Add(this.BtnRefresh);
         this.Name = "ReportForm";
         this.StartPosition = FormStartPosition.CenterScreen;
         this.Text = "统计报表";
@@ -126,10 +128,9 @@ public partial class ReportForm : Form
         CboStatus.Items.Add(new ComboBoxItem("待审批", 1));
         CboStatus.Items.Add(new ComboBoxItem("已审批", 2));
         CboStatus.Items.Add(new ComboBoxItem("已拒绝", 3));
-        CboStatus.Items.Add(new ComboBoxItem("已外发", 4));
-        CboStatus.Items.Add(new ComboBoxItem("已验收", 5));
-        CboStatus.Items.Add(new ComboBoxItem("已对账", 6));
-        CboStatus.Items.Add(new ComboBoxItem("已财务审核", 7));
+        CboStatus.Items.Add(new ComboBoxItem("已验收", 4));
+        CboStatus.Items.Add(new ComboBoxItem("已对账", 5));
+        CboStatus.Items.Add(new ComboBoxItem("已财务审核", 6));
         CboStatus.DisplayMember = "Text";
         CboStatus.ValueMember = "Value";
         CboStatus.SelectedIndex = 0;
@@ -154,13 +155,25 @@ public partial class ReportForm : Form
 
             if (DgvApplications.Columns.Count > 0)
             {
+                // 隐藏不需要显示的列
+                DgvApplications.Columns["ApplicationId"].Visible = false;
+                DgvApplications.Columns["OrderId"].Visible = false;
+                DgvApplications.Columns["ApplicantId"].Visible = false;
+                DgvApplications.Columns["ProcessorId"].Visible = false;
+                DgvApplications.Columns["OperatorId"].Visible = false;
+                DgvApplications.Columns["Status"].Visible = false;
+                DgvApplications.Columns["LatestAuditRemark"].Visible = false;
+                DgvApplications.Columns["Remark"].Visible = false;
+
+                // 设置列标题
                 DgvApplications.Columns["ApplicationNo"].HeaderText = "申请编号";
                 DgvApplications.Columns["OrderNo"].HeaderText = "订单编号";
                 DgvApplications.Columns["ApplicantName"].HeaderText = "申请人";
                 DgvApplications.Columns["ApplicationDate"].HeaderText = "申请日期";
                 DgvApplications.Columns["ProcessorName"].HeaderText = "加工商";
                 DgvApplications.Columns["ProcessingContent"].HeaderText = "加工内容";
-                DgvApplications.Columns["Status"].HeaderText = "状态";
+                DgvApplications.Columns["TotalQuantity"].HeaderText = "数量";
+                DgvApplications.Columns["StatusText"].HeaderText = "状态";
                 DgvApplications.Columns["ExpectedReturnDate"].HeaderText = "预计归还日期";
                 DgvApplications.Columns["OperatorTime"].HeaderText = "操作时间";
                 DgvApplications.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
@@ -179,6 +192,10 @@ public partial class ReportForm : Form
 
     private void BtnRefresh_Click(object sender, EventArgs e)
     {
+        // 重置搜索条件
+        CboStatus.SelectedIndex = 0;
+        TxtSearch.Text = "";
+        // 重新加载数据
         LoadApplications();
     }
 

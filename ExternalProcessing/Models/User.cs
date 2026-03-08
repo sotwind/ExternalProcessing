@@ -27,10 +27,11 @@ public class User
 
 public static class PermissionKeys
 {
-    public const string Application = "外发申请";
-    public const string Audit = "外发审批";
-    public const string Acceptance = "外发验收";
-    public const string Reconciliation = "外发对账";
+    public const string Application = "申请管理";
+    public const string Audit = "审批管理";
+    public const string Acceptance = "验收管理";
+    public const string Reconciliation = "对账管理";
     public const string FinanceAudit = "财务审核";
     public const string Report = "统计报表";
+    public const string UserManagement = "用户管理";
 }

@@ -55,3 +55,4 @@ H:\TraeDev\ExternalProcessing\ExternalProcessing\obj\Debug\net10.0-windows\refin
 H:\TraeDev\ExternalProcessing\ExternalProcessing\obj\Debug\net10.0-windows\ExternalProcessing.pdb
 H:\TraeDev\ExternalProcessing\ExternalProcessing\obj\Debug\net10.0-windows\ExternalProcessing.genruntimeconfig.cache
 H:\TraeDev\ExternalProcessing\ExternalProcessing\obj\Debug\net10.0-windows\ref\ExternalProcessing.dll
+H:\TraeDev\ExternalProcessing\ExternalProcessing\obj\Debug\net10.0-windows\ExternalProcessing.sourcelink.json

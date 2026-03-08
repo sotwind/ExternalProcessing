@@ -14,6 +14,7 @@ partial class MainForm
     private Button BtnReconciliation = null!;
     private Button BtnFinanceAudit = null!;
     private Button BtnReport = null!;
+    private Button BtnUserManagement = null!;
     private Label LblCopyright = null!;
 
     protected override void Dispose(bool disposing)
@@ -37,6 +38,7 @@ partial class MainForm
         this.BtnReconciliation = new Button();
         this.BtnFinanceAudit = new Button();
         this.BtnReport = new Button();
+        this.BtnUserManagement = new Button();
         this.PnlFooter = new Panel();
         this.LblCopyright = new Label();
         this.PnlHeader.SuspendLayout();
@@ -85,6 +87,7 @@ partial class MainForm
         this.PnlContent.Controls.Add(this.BtnReconciliation);
         this.PnlContent.Controls.Add(this.BtnFinanceAudit);
         this.PnlContent.Controls.Add(this.BtnReport);
+        this.PnlContent.Controls.Add(this.BtnUserManagement);
         this.PnlContent.Dock = DockStyle.Fill;
         this.PnlContent.Location = new Point(0, 60);
         this.PnlContent.Name = "PnlContent";
@@ -168,6 +171,19 @@ partial class MainForm
         this.BtnReport.Text = "统计报表";
         this.BtnReport.UseVisualStyleBackColor = false;
         this.BtnReport.Click += new EventHandler(this.BtnReport_Click);
+
+        // BtnUserManagement - 用户管理
+        this.BtnUserManagement.BackColor = Color.FromArgb(111, 66, 193);
+        this.BtnUserManagement.FlatStyle = FlatStyle.Flat;
+        this.BtnUserManagement.Font = new Font("Microsoft YaHei", 14F, FontStyle.Bold);
+        this.BtnUserManagement.ForeColor = Color.White;
+        this.BtnUserManagement.Location = new Point(310, 350);
+        this.BtnUserManagement.Name = "BtnUserManagement";
+        this.BtnUserManagement.Size = new Size(180, 60);
+        this.BtnUserManagement.TabIndex = 6;
+        this.BtnUserManagement.Text = "用户管理";
+        this.BtnUserManagement.UseVisualStyleBackColor = false;
+        this.BtnUserManagement.Click += new EventHandler(this.BtnUserManagement_Click);
 
         // PnlFooter
         this.PnlFooter.BackColor = Color.FromArgb(233, 236, 239);

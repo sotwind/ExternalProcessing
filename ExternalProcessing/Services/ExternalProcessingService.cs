@@ -33,7 +33,28 @@ public class ExternalProcessingService
             applications.Add(MapToApplication(reader));
         }
 
+        // 加载每个申请的最新审批意见
+        foreach (var app in applications)
+        {
+            app.LatestAuditRemark = GetLatestAuditRemark(app.ApplicationId);
+        }
+
         return applications;
+    }
+
+    private string? GetLatestAuditRemark(int applicationId)
+    {
+        var sql = @"SELECT TOP 1 AuditRemark FROM ExternalProcessingAudits 
+                     WHERE ApplicationId = @ApplicationId 
+                     ORDER BY AuditDate DESC";
+
+        using var connection = DbHelper.CreateConnection();
+        connection.Open();
+        using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@ApplicationId", applicationId);
+
+        var result = command.ExecuteScalar();
+        return result == DBNull.Value ? null : result?.ToString();
     }
 
     public ExternalProcessingApplication? GetApplicationById(int applicationId)
@@ -80,25 +101,26 @@ public class ExternalProcessingService
         application.OperatorTime = DateTime.Now;
 
         var sql = @"INSERT INTO ExternalProcessingApplications 
-            (ApplicationNo, OrderId, OrderNo, ApplicantId, ApplicantName, ApplicationDate, ProcessorId, ProcessorName, ProcessingContent, ExpectedReturnDate, Status, Remark, OperatorId, OperatorTime) 
-            VALUES (@ApplicationNo, @OrderId, @OrderNo, @ApplicantId, @ApplicantName, @ApplicationDate, @ProcessorId, @ProcessorName, @ProcessingContent, @ExpectedReturnDate, @Status, @Remark, @OperatorId, @OperatorTime); 
+            (ApplicationNo, OrderId, OrderNo, ApplicantId, ApplicantName, ApplicationDate, ProcessorId, ProcessorName, ProcessingContent, ExpectedReturnDate, Status, Remark, TotalQuantity, OperatorId, OperatorTime) 
+            VALUES (@ApplicationNo, @OrderId, @OrderNo, @ApplicantId, @ApplicantName, @ApplicationDate, @ProcessorId, @ProcessorName, @ProcessingContent, @ExpectedReturnDate, @Status, @Remark, @TotalQuantity, @OperatorId, @OperatorTime); 
             SELECT SCOPE_IDENTITY();";
 
         using var connection = DbHelper.CreateConnection();
         connection.Open();
         using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@ApplicationNo", application.ApplicationNo ?? (object)DBNull.Value);
-        command.Parameters.AddWithValue("@OrderId", application.OrderId);
+        command.Parameters.AddWithValue("@OrderId", application.OrderId.HasValue ? application.OrderId.Value : (object)DBNull.Value);
         command.Parameters.AddWithValue("@OrderNo", application.OrderNo ?? (object)DBNull.Value);
-        command.Parameters.AddWithValue("@ApplicantId", application.ApplicantId);
+        command.Parameters.AddWithValue("@ApplicantId", application.ApplicantId.HasValue ? application.ApplicantId.Value : (object)DBNull.Value);
         command.Parameters.AddWithValue("@ApplicantName", application.ApplicantName ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("@ApplicationDate", application.ApplicationDate);
-        command.Parameters.AddWithValue("@ProcessorId", application.ProcessorId);
+        command.Parameters.AddWithValue("@ProcessorId", application.ProcessorId.HasValue ? application.ProcessorId.Value : (object)DBNull.Value);
         command.Parameters.AddWithValue("@ProcessorName", application.ProcessorName ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("@ProcessingContent", application.ProcessingContent ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("@ExpectedReturnDate", application.ExpectedReturnDate);
         command.Parameters.AddWithValue("@Status", application.Status);
         command.Parameters.AddWithValue("@Remark", application.Remark ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("@TotalQuantity", application.TotalQuantity);
         command.Parameters.AddWithValue("@OperatorId", application.OperatorId);
         command.Parameters.AddWithValue("@OperatorTime", application.OperatorTime);
 
@@ -122,7 +144,7 @@ public class ExternalProcessingService
             ApplicationNo = @ApplicationNo, OrderId = @OrderId, OrderNo = @OrderNo, 
             ApplicantId = @ApplicantId, ApplicantName = @ApplicantName, ApplicationDate = @ApplicationDate, 
             ProcessorId = @ProcessorId, ProcessorName = @ProcessorName, ProcessingContent = @ProcessingContent, 
-            ExpectedReturnDate = @ExpectedReturnDate, Status = @Status, Remark = @Remark, 
+            ExpectedReturnDate = @ExpectedReturnDate, Status = @Status, Remark = @Remark, TotalQuantity = @TotalQuantity, 
             OperatorId = @OperatorId, OperatorTime = @OperatorTime 
             WHERE ApplicationId = @ApplicationId";
 
@@ -131,17 +153,18 @@ public class ExternalProcessingService
         using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@ApplicationId", application.ApplicationId);
         command.Parameters.AddWithValue("@ApplicationNo", application.ApplicationNo ?? (object)DBNull.Value);
-        command.Parameters.AddWithValue("@OrderId", application.OrderId);
+        command.Parameters.AddWithValue("@OrderId", application.OrderId.HasValue ? application.OrderId.Value : (object)DBNull.Value);
         command.Parameters.AddWithValue("@OrderNo", application.OrderNo ?? (object)DBNull.Value);
-        command.Parameters.AddWithValue("@ApplicantId", application.ApplicantId);
+        command.Parameters.AddWithValue("@ApplicantId", application.ApplicantId.HasValue ? application.ApplicantId.Value : (object)DBNull.Value);
         command.Parameters.AddWithValue("@ApplicantName", application.ApplicantName ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("@ApplicationDate", application.ApplicationDate);
-        command.Parameters.AddWithValue("@ProcessorId", application.ProcessorId);
+        command.Parameters.AddWithValue("@ProcessorId", application.ProcessorId.HasValue ? application.ProcessorId.Value : (object)DBNull.Value);
         command.Parameters.AddWithValue("@ProcessorName", application.ProcessorName ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("@ProcessingContent", application.ProcessingContent ?? (object)DBNull.Value);
         command.Parameters.AddWithValue("@ExpectedReturnDate", application.ExpectedReturnDate);
         command.Parameters.AddWithValue("@Status", application.Status);
         command.Parameters.AddWithValue("@Remark", application.Remark ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("@TotalQuantity", application.TotalQuantity);
         command.Parameters.AddWithValue("@OperatorId", application.OperatorId);
         command.Parameters.AddWithValue("@OperatorTime", application.OperatorTime);
 
@@ -171,6 +194,20 @@ public class ExternalProcessingService
         connection.Open();
         using var command = new SqlCommand(sql, connection);
         command.Parameters.AddWithValue("@ApplicationId", applicationId);
+
+        return command.ExecuteNonQuery() > 0;
+    }
+
+    public bool UpdateApplicationStatus(int applicationId, int status)
+    {
+        var sql = "UPDATE ExternalProcessingApplications SET Status = @Status, OperatorTime = @OperatorTime WHERE ApplicationId = @ApplicationId";
+
+        using var connection = DbHelper.CreateConnection();
+        connection.Open();
+        using var command = new SqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@ApplicationId", applicationId);
+        command.Parameters.AddWithValue("@Status", status);
+        command.Parameters.AddWithValue("@OperatorTime", DateTime.Now);
 
         return command.ExecuteNonQuery() > 0;
     }
@@ -236,17 +273,18 @@ public class ExternalProcessingService
         {
             ApplicationId = reader["ApplicationId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["ApplicationId"]),
             ApplicationNo = reader["ApplicationNo"] == DBNull.Value ? null : reader["ApplicationNo"].ToString(),
-            OrderId = reader["OrderId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["OrderId"]),
+            OrderId = reader["OrderId"] == DBNull.Value ? null : Convert.ToInt32(reader["OrderId"]),
             OrderNo = reader["OrderNo"] == DBNull.Value ? null : reader["OrderNo"].ToString(),
-            ApplicantId = reader["ApplicantId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["ApplicantId"]),
+            ApplicantId = reader["ApplicantId"] == DBNull.Value ? null : Convert.ToInt32(reader["ApplicantId"]),
             ApplicantName = reader["ApplicantName"] == DBNull.Value ? null : reader["ApplicantName"].ToString(),
             ApplicationDate = reader["ApplicationDate"] == DBNull.Value ? DateTime.Now : Convert.ToDateTime(reader["ApplicationDate"]),
-            ProcessorId = reader["ProcessorId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["ProcessorId"]),
+            ProcessorId = reader["ProcessorId"] == DBNull.Value ? null : Convert.ToInt32(reader["ProcessorId"]),
             ProcessorName = reader["ProcessorName"] == DBNull.Value ? null : reader["ProcessorName"].ToString(),
             ProcessingContent = reader["ProcessingContent"] == DBNull.Value ? null : reader["ProcessingContent"].ToString(),
             ExpectedReturnDate = reader["ExpectedReturnDate"] == DBNull.Value ? DateTime.Now.AddDays(7) : Convert.ToDateTime(reader["ExpectedReturnDate"]),
             Status = reader["Status"] == DBNull.Value ? 1 : Convert.ToInt32(reader["Status"]),
             Remark = reader["Remark"] == DBNull.Value ? null : reader["Remark"].ToString(),
+            TotalQuantity = reader["TotalQuantity"] == DBNull.Value ? 0 : Convert.ToInt32(reader["TotalQuantity"]),
             OperatorId = reader["OperatorId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["OperatorId"]),
             OperatorTime = reader["OperatorTime"] == DBNull.Value ? DateTime.Now : Convert.ToDateTime(reader["OperatorTime"])
         };
@@ -256,17 +294,17 @@ public class ExternalProcessingService
     {
         return new ExternalProcessingApplicationDetail
         {
-            DetailId = Convert.ToInt32(reader["DetailId"]),
-            ApplicationId = Convert.ToInt32(reader["ApplicationId"]),
-            ItemId = Convert.ToInt32(reader["ItemId"]),
+            DetailId = reader["DetailId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["DetailId"]),
+            ApplicationId = reader["ApplicationId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["ApplicationId"]),
+            ItemId = reader["ItemId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["ItemId"]),
             ItemName = reader["ItemName"] == DBNull.Value ? null : reader["ItemName"].ToString(),
             Specification = reader["Specification"] == DBNull.Value ? null : reader["Specification"].ToString(),
-            Quantity = Convert.ToInt32(reader["Quantity"]),
-            UnitPrice = Convert.ToDecimal(reader["UnitPrice"]),
-            TotalAmount = Convert.ToDecimal(reader["TotalAmount"]),
+            Quantity = reader["Quantity"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Quantity"]),
+            UnitPrice = reader["UnitPrice"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["UnitPrice"]),
+            TotalAmount = reader["TotalAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["TotalAmount"]),
             Remark = reader["Remark"] == DBNull.Value ? null : reader["Remark"].ToString(),
-            OperatorId = Convert.ToInt32(reader["OperatorId"]),
-            OperatorTime = Convert.ToDateTime(reader["OperatorTime"])
+            OperatorId = reader["OperatorId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["OperatorId"]),
+            OperatorTime = reader["OperatorTime"] == DBNull.Value ? DateTime.Now : Convert.ToDateTime(reader["OperatorTime"])
         };
     }
 }

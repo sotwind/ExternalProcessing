@@ -2,6 +2,17 @@ using System;
 
 namespace ExternalProcessing.Models;
 
+public class ExternalProcessingAcceptance
+{
+    public int AcceptanceId { get; set; }
+    public int ApplicationId { get; set; }
+    public DateTime AcceptanceDate { get; set; }
+    public int AcceptanceResult { get; set; }
+    public string? AcceptanceRemark { get; set; }
+    public int OperatorId { get; set; }
+    public DateTime OperatorTime { get; set; }
+}
+
 public class ExternalProcessingReconciliation
 {
     public int ReconciliationId { get; set; }
