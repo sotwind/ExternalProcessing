@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using System.Windows.Forms;
 using ExternalProcessing.Services;
 using ExternalProcessing.Models;
@@ -187,7 +189,71 @@ public partial class ReportForm : Form
 
     private void BtnExport_Click(object sender, EventArgs e)
     {
-        MessageBox.Show("导出功能开发中...", "提示");
+        if (_applications == null || _applications.Count == 0)
+        {
+            MessageBox.Show("没有可导出的数据", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        using (var saveDialog = new SaveFileDialog())
+        {
+            saveDialog.Filter = "CSV文件(*.csv)|*.csv";
+            saveDialog.FileName = $"外协加工统计报表_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            saveDialog.Title = "导出数据";
+
+            if (saveDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    ExportToCsv(saveDialog.FileName);
+                    MessageBox.Show("导出成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"导出失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+    }
+
+    private void ExportToCsv(string filePath)
+    {
+        var sb = new StringBuilder();
+
+        // 写入表头
+        sb.AppendLine("申请编号,订单编号,申请人,申请日期,加工商,加工内容,预计归还日期,数量,操作时间,状态");
+
+        // 写入数据行
+        foreach (var app in _applications)
+        {
+            sb.AppendLine($"{EscapeCsvField(app.ApplicationNo)},{EscapeCsvField(app.OrderNo)},{EscapeCsvField(app.ApplicantName)},{FormatDate(app.ApplicationDate)},{EscapeCsvField(app.ProcessorName)},{EscapeCsvField(app.ProcessingContent)},{FormatDate(app.ExpectedReturnDate)},{app.TotalQuantity},{FormatDateTime(app.OperatorTime)},{EscapeCsvField(app.StatusText)}");
+        }
+
+        File.WriteAllText(filePath, sb.ToString(), Encoding.UTF8);
+    }
+
+    private string EscapeCsvField(string? field)
+    {
+        if (string.IsNullOrEmpty(field))
+            return "";
+
+        // 如果字段包含逗号、换行符或双引号，需要用双引号包裹并转义内部的双引号
+        if (field.Contains(",") || field.Contains("\"") || field.Contains("\n") || field.Contains("\r"))
+        {
+            return "\"" + field.Replace("\"", "\"\"") + "\"";
+        }
+
+        return field;
+    }
+
+    private string FormatDate(DateTime? date)
+    {
+        return date?.ToString("yyyy-MM-dd") ?? "";
+    }
+
+    private string FormatDateTime(DateTime? dateTime)
+    {
+        return dateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "";
     }
 
     private void BtnRefresh_Click(object sender, EventArgs e)
