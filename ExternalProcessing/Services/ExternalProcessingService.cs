@@ -8,19 +8,60 @@ namespace ExternalProcessing.Services;
 
 public class ExternalProcessingService
 {
-    public List<ExternalProcessingApplication> GetAllApplications(int? status = null)
+    /// <summary>
+    /// 获取申请列表（优化版：使用单个查询获取所有数据，包括最新审批意见）
+    /// </summary>
+    public List<ExternalProcessingApplication> GetAllApplications(
+        int? status = null,
+        List<int>? statusList = null,
+        DateTime? startDate = null,
+        DateTime? endDate = null)
     {
         var applications = new List<ExternalProcessingApplication>();
-        var sql = "SELECT * FROM ExternalProcessingApplications WHERE 1=1";
+        var sql = @"SELECT a.*, 
+                           (SELECT TOP 1 AuditRemark 
+                            FROM ExternalProcessingAudits 
+                            WHERE ApplicationId = a.ApplicationId 
+                            ORDER BY AuditDate DESC) as LatestAuditRemark
+                     FROM ExternalProcessingApplications a
+                     WHERE 1=1";
         var parameters = new List<SqlParameter>();
 
+        // 单个状态筛选
         if (status.HasValue)
         {
-            sql += " AND Status = @Status";
+            sql += " AND a.Status = @Status";
             parameters.Add(new SqlParameter("@Status", status.Value));
         }
 
-        sql += " ORDER BY ApplicationDate DESC";
+        // 多个状态筛选（用于各管理界面只显示特定状态）
+        if (statusList != null && statusList.Count > 0)
+        {
+            var statusParams = new List<string>();
+            for (int i = 0; i < statusList.Count; i++)
+            {
+                var paramName = $"@Status{i}";
+                statusParams.Add(paramName);
+                parameters.Add(new SqlParameter(paramName, statusList[i]));
+            }
+            sql += $" AND a.Status IN ({string.Join(", ", statusParams)})";
+        }
+
+        // 开始日期筛选
+        if (startDate.HasValue)
+        {
+            sql += " AND a.ApplicationDate >= @StartDate";
+            parameters.Add(new SqlParameter("@StartDate", startDate.Value.Date));
+        }
+
+        // 结束日期筛选（包含当天结束时间）
+        if (endDate.HasValue)
+        {
+            sql += " AND a.ApplicationDate <= @EndDate";
+            parameters.Add(new SqlParameter("@EndDate", endDate.Value.Date.AddDays(1).AddSeconds(-1)));
+        }
+
+        sql += " ORDER BY a.ApplicationDate DESC";
 
         using var connection = DbHelper.CreateConnection();
         connection.Open();
@@ -33,34 +74,19 @@ public class ExternalProcessingService
             applications.Add(MapToApplication(reader));
         }
 
-        // 加载每个申请的最新审批意见
-        foreach (var app in applications)
-        {
-            app.LatestAuditRemark = GetLatestAuditRemark(app.ApplicationId);
-        }
-
         return applications;
-    }
-
-    private string? GetLatestAuditRemark(int applicationId)
-    {
-        var sql = @"SELECT TOP 1 AuditRemark FROM ExternalProcessingAudits 
-                     WHERE ApplicationId = @ApplicationId 
-                     ORDER BY AuditDate DESC";
-
-        using var connection = DbHelper.CreateConnection();
-        connection.Open();
-        using var command = new SqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@ApplicationId", applicationId);
-
-        var result = command.ExecuteScalar();
-        return result == DBNull.Value ? null : result?.ToString();
     }
 
     public ExternalProcessingApplication? GetApplicationById(int applicationId)
     {
-        var sql = "SELECT * FROM ExternalProcessingApplications WHERE ApplicationId = @ApplicationId";
-        
+        var sql = @"SELECT a.*, 
+                           (SELECT TOP 1 AuditRemark 
+                            FROM ExternalProcessingAudits 
+                            WHERE ApplicationId = a.ApplicationId 
+                            ORDER BY AuditDate DESC) as LatestAuditRemark
+                     FROM ExternalProcessingApplications a
+                     WHERE a.ApplicationId = @ApplicationId";
+
         using var connection = DbHelper.CreateConnection();
         connection.Open();
         using var command = new SqlCommand(sql, connection);
@@ -269,7 +295,7 @@ public class ExternalProcessingService
 
     private ExternalProcessingApplication MapToApplication(SqlDataReader reader)
     {
-        return new ExternalProcessingApplication
+        var app = new ExternalProcessingApplication
         {
             ApplicationId = reader["ApplicationId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["ApplicationId"]),
             ApplicationNo = reader["ApplicationNo"] == DBNull.Value ? null : reader["ApplicationNo"].ToString(),
@@ -288,6 +314,14 @@ public class ExternalProcessingService
             OperatorId = reader["OperatorId"] == DBNull.Value ? 0 : Convert.ToInt32(reader["OperatorId"]),
             OperatorTime = reader["OperatorTime"] == DBNull.Value ? DateTime.Now : Convert.ToDateTime(reader["OperatorTime"])
         };
+
+        // 读取最新审批意见（来自子查询）
+        if (reader["LatestAuditRemark"] != DBNull.Value)
+        {
+            app.LatestAuditRemark = reader["LatestAuditRemark"].ToString();
+        }
+
+        return app;
     }
 
     private ExternalProcessingApplicationDetail MapToDetail(SqlDataReader reader)

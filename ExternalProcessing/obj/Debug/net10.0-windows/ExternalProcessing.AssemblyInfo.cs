@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ExternalProcessing")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+792a7190d2b458cb3f5aa036ad302bbf50cc26b7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+484ae446f07621ab8e62f5ddf9b6216b9161ef6b")]
 [assembly: System.Reflection.AssemblyProductAttribute("ExternalProcessing")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ExternalProcessing")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

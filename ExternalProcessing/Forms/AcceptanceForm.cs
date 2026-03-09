@@ -30,54 +30,98 @@ public partial class AcceptanceForm : Form
         this.BtnSearch = new Button();
         this.Label1 = new Label();
         this.Label2 = new Label();
+        this.LblStartDate = new Label();
+        this.LblEndDate = new Label();
+        this.DtpStartDate = new DateTimePicker();
+        this.DtpEndDate = new DateTimePicker();
+        this.LabelTo = new Label();
         ((System.ComponentModel.ISupportInitialize)(this.DgvApplications)).BeginInit();
         this.SuspendLayout();
 
-        this.Label1.Location = new System.Drawing.Point(30, 28);
+        // LblStartDate
+        this.LblStartDate.Location = new System.Drawing.Point(30, 28);
+        this.LblStartDate.Name = "LblStartDate";
+        this.LblStartDate.Size = new System.Drawing.Size(70, 23);
+        this.LblStartDate.TabIndex = 0;
+        this.LblStartDate.Text = "开始日期：";
+
+        // DtpStartDate
+        this.DtpStartDate.Location = new System.Drawing.Point(100, 26);
+        this.DtpStartDate.Name = "DtpStartDate";
+        this.DtpStartDate.Size = new System.Drawing.Size(120, 23);
+        this.DtpStartDate.TabIndex = 1;
+        this.DtpStartDate.Format = DateTimePickerFormat.Short;
+        this.DtpStartDate.ShowCheckBox = true;
+        this.DtpStartDate.Checked = false;
+
+        // LabelTo
+        this.LabelTo.Location = new System.Drawing.Point(225, 28);
+        this.LabelTo.Name = "LabelTo";
+        this.LabelTo.Size = new System.Drawing.Size(20, 23);
+        this.LabelTo.TabIndex = 2;
+        this.LabelTo.Text = "至";
+
+        // DtpEndDate
+        this.DtpEndDate.Location = new System.Drawing.Point(250, 26);
+        this.DtpEndDate.Name = "DtpEndDate";
+        this.DtpEndDate.Size = new System.Drawing.Size(120, 23);
+        this.DtpEndDate.TabIndex = 3;
+        this.DtpEndDate.Format = DateTimePickerFormat.Short;
+        this.DtpEndDate.ShowCheckBox = true;
+        this.DtpEndDate.Checked = false;
+
+        // Label1
+        this.Label1.Location = new System.Drawing.Point(380, 28);
         this.Label1.Name = "Label1";
         this.Label1.Size = new System.Drawing.Size(60, 23);
-        this.Label1.TabIndex = 0;
+        this.Label1.TabIndex = 4;
         this.Label1.Text = "状态：";
 
-        this.Label2.Location = new System.Drawing.Point(310, 28);
-        this.Label2.Name = "Label2";
-        this.Label2.Size = new System.Drawing.Size(60, 23);
-        this.Label2.TabIndex = 1;
-        this.Label2.Text = "搜索：";
-
+        // CboStatus
         this.CboStatus.DropDownStyle = ComboBoxStyle.DropDownList;
         this.CboStatus.FormattingEnabled = true;
-        this.CboStatus.Location = new System.Drawing.Point(90, 26);
+        this.CboStatus.Location = new System.Drawing.Point(440, 26);
         this.CboStatus.Name = "CboStatus";
-        this.CboStatus.Size = new System.Drawing.Size(150, 23);
-        this.CboStatus.TabIndex = 2;
+        this.CboStatus.Size = new System.Drawing.Size(120, 23);
+        this.CboStatus.TabIndex = 5;
         this.CboStatus.SelectedIndexChanged += new EventHandler(this.CboStatus_SelectedIndexChanged);
 
-        this.TxtSearch.Location = new System.Drawing.Point(370, 26);
-        this.TxtSearch.Name = "TxtSearch";
-        this.TxtSearch.Size = new System.Drawing.Size(233, 23);
-        this.TxtSearch.TabIndex = 3;
+        // Label2
+        this.Label2.Location = new System.Drawing.Point(570, 28);
+        this.Label2.Name = "Label2";
+        this.Label2.Size = new System.Drawing.Size(60, 23);
+        this.Label2.TabIndex = 6;
+        this.Label2.Text = "搜索：";
 
-        this.BtnSearch.Location = new System.Drawing.Point(620, 23);
+        // TxtSearch
+        this.TxtSearch.Location = new System.Drawing.Point(630, 26);
+        this.TxtSearch.Name = "TxtSearch";
+        this.TxtSearch.Size = new System.Drawing.Size(180, 23);
+        this.TxtSearch.TabIndex = 7;
+
+        // BtnSearch
+        this.BtnSearch.Location = new System.Drawing.Point(820, 23);
         this.BtnSearch.Name = "BtnSearch";
-        this.BtnSearch.Size = new System.Drawing.Size(93, 30);
-        this.BtnSearch.TabIndex = 4;
+        this.BtnSearch.Size = new System.Drawing.Size(75, 30);
+        this.BtnSearch.TabIndex = 8;
         this.BtnSearch.Text = "搜索";
         this.BtnSearch.Click += new EventHandler(this.BtnSearch_Click);
 
-        this.BtnRefresh.Location = new System.Drawing.Point(720, 23);
+        // BtnRefresh
+        this.BtnRefresh.Location = new System.Drawing.Point(900, 23);
         this.BtnRefresh.Name = "BtnRefresh";
-        this.BtnRefresh.Size = new System.Drawing.Size(93, 30);
-        this.BtnRefresh.TabIndex = 5;
+        this.BtnRefresh.Size = new System.Drawing.Size(75, 30);
+        this.BtnRefresh.TabIndex = 9;
         this.BtnRefresh.Text = "重置";
         this.BtnRefresh.Click += new EventHandler(this.BtnRefresh_Click);
 
+        // DgvApplications
         this.DgvApplications.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         this.DgvApplications.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
         this.DgvApplications.Location = new System.Drawing.Point(30, 70);
         this.DgvApplications.Name = "DgvApplications";
         this.DgvApplications.Size = new System.Drawing.Size(940, 480);
-        this.DgvApplications.TabIndex = 4;
+        this.DgvApplications.TabIndex = 10;
         this.DgvApplications.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
         this.DgvApplications.MultiSelect = false;
         this.DgvApplications.ReadOnly = true;
@@ -89,7 +133,7 @@ public partial class AcceptanceForm : Form
         this.BtnAccept.Location = new System.Drawing.Point(990, 70);
         this.BtnAccept.Name = "BtnAccept";
         this.BtnAccept.Size = new System.Drawing.Size(100, 35);
-        this.BtnAccept.TabIndex = 6;
+        this.BtnAccept.TabIndex = 11;
         this.BtnAccept.Text = "验收";
         this.BtnAccept.UseVisualStyleBackColor = false;
         this.BtnAccept.Click += new EventHandler(this.BtnAccept_Click);
@@ -102,7 +146,7 @@ public partial class AcceptanceForm : Form
         this.BtnUnAccept.Location = new System.Drawing.Point(990, 120);
         this.BtnUnAccept.Name = "BtnUnAccept";
         this.BtnUnAccept.Size = new System.Drawing.Size(100, 35);
-        this.BtnUnAccept.TabIndex = 7;
+        this.BtnUnAccept.TabIndex = 12;
         this.BtnUnAccept.Text = "反审";
         this.BtnUnAccept.UseVisualStyleBackColor = false;
         this.BtnUnAccept.Click += new EventHandler(this.BtnUnAccept_Click);
@@ -110,9 +154,13 @@ public partial class AcceptanceForm : Form
         this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
         this.AutoScaleMode = AutoScaleMode.Font;
         this.ClientSize = new System.Drawing.Size(1120, 600);
+        this.Controls.Add(this.LblStartDate);
+        this.Controls.Add(this.DtpStartDate);
+        this.Controls.Add(this.LabelTo);
+        this.Controls.Add(this.DtpEndDate);
         this.Controls.Add(this.Label1);
-        this.Controls.Add(this.Label2);
         this.Controls.Add(this.CboStatus);
+        this.Controls.Add(this.Label2);
         this.Controls.Add(this.TxtSearch);
         this.Controls.Add(this.BtnSearch);
         this.Controls.Add(this.BtnRefresh);
@@ -136,6 +184,11 @@ public partial class AcceptanceForm : Form
     private Button BtnSearch = null!;
     private Label Label1 = null!;
     private Label Label2 = null!;
+    private Label LblStartDate = null!;
+    private Label LblEndDate = null!;
+    private DateTimePicker DtpStartDate = null!;
+    private DateTimePicker DtpEndDate = null!;
+    private Label LabelTo = null!;
 
     private void LoadStatusOptions()
     {
@@ -148,12 +201,13 @@ public partial class AcceptanceForm : Form
         CboStatus.SelectedIndex = 0;
     }
 
-    private void LoadApplications(int? status = null, string searchText = "")
+    private void LoadApplications(int? status = null, string searchText = "", DateTime? startDate = null, DateTime? endDate = null)
     {
         try
         {
-            var allApplications = _service.GetAllApplications();
-            _applications = allApplications.FindAll(a => a.Status == 2 || a.Status == 4);
+            // 使用数据库端状态筛选，只查询验收相关的状态（2,4）
+            var statusList = new List<int> { 2, 4 };
+            _applications = _service.GetAllApplications(null, statusList, startDate, endDate);
 
             if (status.HasValue)
             {
@@ -298,6 +352,8 @@ public partial class AcceptanceForm : Form
     {
         CboStatus.SelectedIndex = 0;
         TxtSearch.Text = "";
+        DtpStartDate.Checked = false;
+        DtpEndDate.Checked = false;
         LoadApplications();
     }
 
@@ -306,7 +362,9 @@ public partial class AcceptanceForm : Form
         var selectedItem = CboStatus.SelectedItem as ComboBoxItem;
         var status = selectedItem?.Value as int?;
         var searchText = TxtSearch.Text.Trim();
-        LoadApplications(status, searchText);
+        var startDate = DtpStartDate.Checked ? DtpStartDate.Value : (DateTime?)null;
+        var endDate = DtpEndDate.Checked ? DtpEndDate.Value : (DateTime?)null;
+        LoadApplications(status, searchText, startDate, endDate);
     }
 
     private void CboStatus_SelectedIndexChanged(object sender, EventArgs e)
